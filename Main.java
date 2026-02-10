@@ -118,9 +118,17 @@ public class Main {
                     hand.setHandType(6);
                 } else if (getHandType == 2) {
                     hand.setHandType(5);
+                } else if (getHandType == 1) {
+                    hand.setHandType(3);
                 }
             } else if (numberOfJacks == 3) {
                 if (getHandType == 4) {
+                    hand.setHandType(6);
+                } else if (getHandType == 3) {
+                    hand.setHandType(5);
+                }
+            } else if (numberOfJacks == 4) {
+                if (getHandType == 5) {
                     hand.setHandType(6);
                 }
             }
