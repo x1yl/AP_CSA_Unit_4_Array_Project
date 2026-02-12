@@ -10,7 +10,6 @@ public class Main {
             File f = new File("src/data");
             Scanner s = new Scanner(f);
 
-
             while (s.hasNextLine()) {
                 String line = s.nextLine();
                 fileData += line + "\n";
@@ -30,8 +29,6 @@ public class Main {
         int highCard = 0;
 
         Hand[] handObjects = new Hand[hands.length];
-        int totalBidValue = 0;
-        int totalBidValueWithWildJack = 0;
 
         for (int i = 0; i < hands.length; i++) {
             String[] cards = hands[i].split(",");
@@ -40,7 +37,7 @@ public class Main {
             for (int j = 0; j < cards.length; j++) {
                 String card = cards[j];
                 int barIndex = card.indexOf("|");
-                if (card.contains("|")) {
+                if (barIndex != -1) {
                     bid = Integer.parseInt(card.substring(barIndex + 1));
                     cards[j] = card.substring(0, barIndex);
                 }
@@ -57,27 +54,27 @@ public class Main {
                 }
             }
 
-            int[] countOfEachType = new int[14];
+            int[] countOfEachCard = new int[14];
             for (int card : cardsAsInt) {
-                countOfEachType[card - 1]++;
+                countOfEachCard[card - 1]++;
             }
-            String countOfEachTypeAsString = Arrays.toString(countOfEachType);
-            if (countOfEachTypeAsString.contains("5")) {
+            String countOfEachCardAsString = Arrays.toString(countOfEachCard);
+            if (countOfEachCardAsString.contains("5")) {
                 fiveOfAKind++;
                 handObjects[i] = new Hand(cardsAsInt, 6, bid);
-            } else if (countOfEachTypeAsString.contains("4")) {
+            } else if (countOfEachCardAsString.contains("4")) {
                 fourOfAKind++;
                 handObjects[i] = new Hand(cardsAsInt, 5, bid);
-            } else if (countOfEachTypeAsString.contains("3") && countOfEachTypeAsString.contains("2")) {
+            } else if (countOfEachCardAsString.contains("3") && countOfEachCardAsString.contains("2")) {
                 fullHouse++;
                 handObjects[i] = new Hand(cardsAsInt, 4, bid);
-            } else if (countOfEachTypeAsString.contains("3")) {
+            } else if (countOfEachCardAsString.contains("3")) {
                 threeOfAKind++;
                 handObjects[i] = new Hand(cardsAsInt, 3, bid);
-            } else if (countOfEachTypeAsString.contains("2") && countOfEachTypeAsString.indexOf("2") != countOfEachTypeAsString.lastIndexOf("2")) {
+            } else if (countOfEachCardAsString.contains("2") && countOfEachCardAsString.indexOf("2") != countOfEachCardAsString.lastIndexOf("2")) {
                 twoPair++;
                 handObjects[i] = new Hand(cardsAsInt, 2, bid);
-            } else if (countOfEachTypeAsString.contains("2")) {
+            } else if (countOfEachCardAsString.contains("2")) {
                 onePair++;
                 handObjects[i] = new Hand(cardsAsInt, 1, bid);
             } else {
@@ -85,55 +82,14 @@ public class Main {
                 handObjects[i] = new Hand(cardsAsInt, 0, bid);
             }
         }
-        totalBidValue = getTotal(handObjects, totalBidValue);
+        int totalBidValue = getTotal(handObjects);
 
-        for (Hand hand : handObjects) {
-            int[] cards = hand.getCards();
-            int[] wildJackCards = new int[cards.length];
-            int numberOfJacks = 0;
-            int getHandType = hand.getHandType();
-            for (int j = 0; j < cards.length; j++) {
-                if (cards[j] == 11) {
-                    numberOfJacks++;
-                    wildJackCards[j] = 1;
-                } else {
-                    wildJackCards[j] = cards[j];
-                }
-            }
-            hand.setCards(wildJackCards);
-            if (numberOfJacks == 1) {
-                if (getHandType == 5) {
-                    hand.setHandType(6);
-                } else if (getHandType == 3) {
-                    hand.setHandType(5);
-                } else if (getHandType == 2) {
-                    hand.setHandType(4);
-                } else if (getHandType == 1) {
-                    hand.setHandType(3);
-                } else if (getHandType == 0) {
-                    hand.setHandType(1);
-                }
-            } else if (numberOfJacks == 2) {
-                if (getHandType == 4) {
-                    hand.setHandType(6);
-                } else if (getHandType == 2) {
-                    hand.setHandType(5);
-                } else if (getHandType == 1) {
-                    hand.setHandType(3);
-                }
-            } else if (numberOfJacks == 3) {
-                if (getHandType == 4) {
-                    hand.setHandType(6);
-                } else if (getHandType == 3) {
-                    hand.setHandType(5);
-                }
-            } else if (numberOfJacks == 4) {
-                if (getHandType == 5) {
-                    hand.setHandType(6);
-                }
-            }
+        for (Hand handObject : handObjects) {
+            int numberOfJacks = handObject.wildJack();
+            handObject.wildJackHandTypes(numberOfJacks);
         }
-        totalBidValueWithWildJack = getTotal(handObjects, totalBidValueWithWildJack);
+
+        int totalBidValueWithWildJack = getTotal(handObjects);
 
         System.out.println("Number of five of a kind hands: " + fiveOfAKind);
         System.out.println("Number of full house hands: " + fullHouse);
@@ -146,17 +102,18 @@ public class Main {
         System.out.println("Total Bid Value With Jacks Wild: " + totalBidValueWithWildJack);
     }
 
-    private static int getTotal(Hand[] handObjects, int total) {
-        for (Hand hand : handObjects) {
+    private static int getTotal(Hand[] handObjects) {
+        int total = 0;
+        for (Hand handObject : handObjects) {
             int numberOfWeakerHands = 0;
-            for (Hand handObject : handObjects) {
-                if (hand.isStronger(handObject)) {
+            for (Hand object : handObjects) {
+                if (handObject.isStronger(object)) {
                     numberOfWeakerHands++;
                 }
             }
 
-            hand.setRank(numberOfWeakerHands + 1);
-            total += hand.getRank() * hand.getBid();
+            handObject.setRank(numberOfWeakerHands + 1);
+            total += handObject.getRank() * handObject.getBid();
         }
         return total;
     }
